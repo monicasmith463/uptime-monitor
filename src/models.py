@@ -13,3 +13,10 @@ class HealthCheck(Base):
     status_code = Column(Integer)
     error = Column(String)
     created_at = Column(DateTime, default=datetime.now)
+
+class Site(Base):
+    __tablename__ = "sites"
+
+    id = Column(Integer, primary_key=True)
+    url = Column(String, unique=True)
+    created_at = Column(DateTime, default=datetime.now)
