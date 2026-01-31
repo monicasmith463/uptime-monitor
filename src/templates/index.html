@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<body>
+
+<h2>Add Site</h2>
+
+<form action="/add_site" method="POST">
+  <input name="site" placeholder="https://example.com" required>
+  <button type="submit">Submit</button>
+</form>
+
+<form method="GET" action="/">
+  <button type="submit">Refresh Health Checks</button>
+</form>
+
+<hr>
+
+<h3>Tracked Sites</h3>
+<ul>
+  {% for s in sites %}
+    <li>{{ s.url }}</li>
+  {% endfor %}
+</ul>
+
+<h3>Recent Health Checks</h3>
+<table border="1">
+<tr>
+  <th>Site</th>
+  <th>Status</th>
+  <th>Response Time</th>
+  <th>Error</th>
+  <th>Time</th>
+</tr>
+
+{% for c in checks %}
+<tr>
+  <td>{{ c.site }}</td>
+  <td>{{ c.status_code }}</td>
+  <td>{{ c.response_time }}</td>
+  <td>{{ c.error }}</td>
+  <td>{{ c.created_at }}</td>
+</tr>
+{% endfor %}
+</table>
+
+</body>
+</html>

@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
+import sys
+from pathlib import Path
 
-from flask import Flask, request
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from flask import Flask, render_template, request
 import requests
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from models import Base, HealthCheck
+from src.models import Base, HealthCheck, Site
 import redis
 
 r = redis.Redis(host="localhost", port=6379)
@@ -38,19 +43,42 @@ def init_db():
 def fetch_sites():
     pass
 
+def db_add_site(url):
+    session = Session()
+    site = Site(url=url)
+    try:
+        #lookup if site already exists
+        if session.query(Site).filter_by(url=url).first():
+            return "Site already exists"
+        session.add(site)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        return "Error adding site: " + str(e)
+    finally:
+        session.close()
+    return "Site added successfully"
+
+def db_get_dashboard_data():
+    session = Session()
+    sites = session.query(Site).all()
+    checks = session.query(HealthCheck).order_by(HealthCheck.created_at.desc()).limit(20).all()
+    session.close()
+    return sites, checks
+
 @app.route("/")
 def main():
-    return '''
-     <form action="/echo_user_input" method="POST">
-         <input name="user_input">
-         <input type="submit" value="Submit!">
-     </form>
-     '''
+    sites, checks = db_get_dashboard_data()
+    return render_template("index.html", sites=sites, checks=checks)
 
-@app.route("/echo_user_input", methods=["POST"])
-def echo_input():
-    input_text = request.form.get("user_input", "")
-    return "You entered: " + input_text
+@app.route("/", methods=["POST"])
+def add_site():
+    input_text = request.form.get("site", "")
+    if not input_text:
+        return "No site provided"
+    result = db_add_site(input_text)
+    sites, checks = db_get_dashboard_data()
+    return render_template("index.html", sites=sites, checks=checks)
 
 if __name__ == "__main__":
     init_db()
