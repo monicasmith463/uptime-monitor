@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import Base, User
+from models import Base, HealthCheck
 import redis
 
 r = redis.Redis(host="localhost", port=6379)
@@ -35,28 +35,11 @@ app = Flask(__name__)
 def init_db():
     Base.metadata.create_all(engine)
 
-def fetch_users():
-    print(r.get("ping"))
-    url = "https://jsonplaceholder.typicode.com/users"
-    response = requests.get(url)
-    users = response.json()
-
-    session = Session()
-
-    for u in users:
-        user = User(
-            id=u["id"],
-            name=u["name"],
-            email=u["email"]
-        )
-        session.merge(user)
-
-    session.commit()
-    session.close()
+def fetch_sites():
+    pass
 
 @app.route("/")
 def main():
-    fetch_users()
     return '''
      <form action="/echo_user_input" method="POST">
          <input name="user_input">
